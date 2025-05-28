@@ -10,8 +10,11 @@ const app = express();
 
 //cors middleware
 app.use(cors({
+    // origin: true,                                   //Enable CORS for all origins
     credentials: true,                              //allow credentials like cookies and all
-    origin: true,                                   //Enable CORS for all origins
+    origin: [
+        'https://excel-analytics-platform-client.vercel.app'
+    ]
 }));
 
 //----parsers-----
@@ -33,7 +36,7 @@ app.use((_, res) => {                               //if not routes match
 });
 
 // Central error handler
-app.use((err, _, res) => {                          
+app.use((err, _, res) => {
     console.error(err);
     res.status(500).json({ code: 'error', message: 'Internal server error' });
 });
