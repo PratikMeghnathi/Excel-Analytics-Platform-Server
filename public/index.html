@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login Page</title>
+</head>
+<body>
+  <h2>Login</h2>
+  <form id="loginForm">
+    <label>Email:</label>
+    <input type="email" id="email" required><br><br>
+    
+    <label>Password:</label>
+    <input type="password" id="password" required><br><br>
+    
+    <button type="submit">Login</button>
+  </form>
+
+  <p id="responseMsg" style="color: red;"></p>
+
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const res = await fetch("http://localhost:5000/api/user/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include", // IMPORTANT: allows cookies to be set
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById("responseMsg").style.color = "green";
+          document.getElementById("responseMsg").textContent = "Login successful!";
+        } else {
+          document.getElementById("responseMsg").textContent = data.message || "Login failed!";
+        }
+      } catch (err) {
+        document.getElementById("responseMsg").textContent = "Error logging in. Check console.";
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
