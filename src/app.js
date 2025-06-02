@@ -8,6 +8,7 @@ import { __rootdir } from "./utils/index.js";
 import { env } from "./config/index.js";
 
 const app = express();
+console.log(env.frontend_url)
 //cors middleware
 app.use(cors({
     // origin: true,                                   //Enable CORS for all origins
