@@ -1,11 +1,16 @@
 import { Analysis, FileUpload, User } from "../models/index.js";
+import { createError, errorCodes } from "../utils/index.js";
 
-export const getDashboardAnalytics = async (req, res) => {
+export const getAdminDashboardAnalytics = async (req, res) => {
     try {
+        // Check if user is admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json(createError(errorCodes.forbidden, 'permission', 'Access denied. Admin privileges required.'));
+        }
+
         const now = new Date();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-        // Parallel execution for optimal performance
         const [
             basicStats,
             userStats,
@@ -15,12 +20,11 @@ export const getDashboardAnalytics = async (req, res) => {
             getBasicStats(),
 
             // User Stats
-            getUserStats(),
+            getUserStats(thirtyDaysAgo),
 
             // Analytics & Reporting Stats
             getAnalyticsReportingStats(thirtyDaysAgo)
         ]);
-
 
         const response = {
             basicStats,
@@ -32,11 +36,8 @@ export const getDashboardAnalytics = async (req, res) => {
         res.status(200).json(response);
 
     } catch (error) {
-        console.error('Dashboard analytics error:', error);
-        res.status(500).json({
-            error: 'Failed to fetch dashboard analytics',
-            message: error.message
-        });
+        console.error('Admiini dashboard analytics error:', error);
+        res.status(500).json(createError(errorCodes.serverError, 'serverError', 'An error occured while uploading and parsing excel file.'));
     }
 };
 
@@ -57,11 +58,8 @@ const getBasicStats = async () => {
     };
 };
 
-
 // User Stats: ID, Name, Permissions, Activity, Status
-const getUserStats = async () => {
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-
+const getUserStats = async (thirtyDaysAgo) => {
     const users = await User.aggregate([
         { $match: { role: 'user' } },
         {
@@ -86,15 +84,37 @@ const getUserStats = async () => {
                     $filter: {
                         input: '$uploads',
                         as: 'upload',
-                        cond: { $gte: ['$upload.createdAt', thirtyDaysAgo] }
+                        cond: { $gte: ['$$upload.createdAt', thirtyDaysAgo] }
                     }
                 },
                 recentAnalyses: {
                     $filter: {
                         input: '$analyses',
                         as: 'analysis',
-                        cond: { $gte: ['$analysis.createdAt', thirtyDaysAgo] }
+                        cond: { $gte: ['$$analysis.createdAt', thirtyDaysAgo] }
                     }
+                }
+            }
+        },
+        {
+            $addFields: {
+                totalRecentActivity: {
+                    $add: [
+                        { $size: '$recentUploads' },
+                        { $size: '$recentAnalyses' }
+                    ]
+                },
+                // Determine if user is active (has activity in last 30 days)
+                isActive: {
+                    $gt: [
+                        {
+                            $add: [
+                                { $size: '$recentUploads' },
+                                { $size: '$recentAnalyses' }
+                            ]
+                        },
+                        0
+                    ]
                 }
             }
         },
@@ -112,17 +132,38 @@ const getUserStats = async () => {
                         analyses: { $size: '$recentAnalyses' }
                     }
                 },
+                // Better handle lastActivity with null checks
                 lastActivity: {
-                    $max: [
-                        { $max: '$uploads.createdAt' },
-                        { $max: '$analyses.createdAt' }
-                    ]
+                    $cond: {
+                        if: {
+                            $or: [
+                                { $gt: [{ $size: '$uploads' }, 0] },
+                                { $gt: [{ $size: '$analyses' }, 0] }
+                            ]
+                        },
+                        then: {
+                            $max: [
+                                { $ifNull: [{ $max: '$uploads.createdAt' }, new Date(0)] },
+                                { $ifNull: [{ $max: '$analyses.createdAt' }, new Date(0)] }
+                            ]
+                        },
+                        else: null
+                    }
                 },
                 uploadLimit: '$uploadLimit',
-                analysisLimit: '$analysisLimit'
+                analysisLimit: '$analysisLimit',
+                totalRecentActivity: 1,
+                isActive: 1,
+                status: {
+                    $cond: {
+                        if: '$isActive',
+                        then: 'Active',
+                        else: 'Inactive'
+                    }
+                }
             }
         },
-        { $sort: { 'activity.total': -1 } }
+        { $sort: { totalRecentActivity: -1, lastActivity: -1 } }
     ]);
 
     return users;
@@ -133,11 +174,18 @@ const getAnalyticsReportingStats = async (thirtyDaysAgo) => {
     const [
         totalUsers,
         totalUploads,
+        recentUploads,
         activeUsers,
         peakUploadTime
     ] = await Promise.all([
         User.countDocuments({ role: 'user' }),
-        FileUpload.countDocuments(),
+        FileUpload.countDocuments({ userId: { $exists: true } }),
+
+        // Recent uploads for consistent time period calculation
+        FileUpload.countDocuments({
+            userId: { $exists: true },
+            createdAt: { $gte: thirtyDaysAgo }
+        }),
 
         // Active users based on actual activity (uploads OR analyses in last 30 days)
         User.aggregate([
@@ -185,11 +233,12 @@ const getAnalyticsReportingStats = async (thirtyDaysAgo) => {
             { $count: 'activeUsers' }
         ]).then(result => result.length > 0 ? result[0].activeUsers : 0),
 
-        // Peak Upload Time - Most active hour
+        // Peak Upload Time - Most active hour (consistent 30-day period)
         FileUpload.aggregate([
             {
                 $match: {
-                    createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
+                    createdAt: { $gte: thirtyDaysAgo },
+                    userId: { $exists: true }
                 }
             },
             {
@@ -210,20 +259,28 @@ const getAnalyticsReportingStats = async (thirtyDaysAgo) => {
         ])
     ]);
 
-    // Convert hour to AM/PM format
+    // Convert hour to AM/PM format with better error handling
     const formatHour = (hour) => {
-        if (hour === null || hour === undefined) return 'No data';
+        if (hour === null || hour === undefined) return 'No data available';
         const period = hour >= 12 ? 'PM' : 'AM';
         const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
         return `${displayHour}:00 ${period}`;
     };
 
-    // Peak upload time
+    // Better handling of peak upload time
     const peakHour = peakUploadTime.length > 0 ? peakUploadTime[0].hour : null;
+    const peakUploadCount = peakUploadTime.length > 0 ? peakUploadTime[0].count : 0;
+
+    // Use recent uploads for frequency calculation (last 30 days) instead of all-time
+    const uploadFrequency = totalUsers > 0 ? parseFloat((recentUploads / totalUsers).toFixed(2)) : 0;
+    const usageRate = totalUsers > 0 ? parseFloat(((activeUsers / totalUsers) * 100).toFixed(2)) : 0;
 
     return {
-        uploadFrequency: parseFloat((totalUploads / totalUsers).toFixed(2)),
+        uploadFrequency, // Average uploads per user in last 30 days
         peakUploadTime: formatHour(peakHour),
-        usageRate: parseFloat(((activeUsers / totalUsers) * 100).toFixed(2))
+        peakUploadCount, // Number of uploads during peak hour
+        usageRate, // Percentage of users active in last 30 days
+        totalRecentUploads: recentUploads, // Total uploads in last 30 days
+        totalUploadsAllTime: totalUploads // Total uploads all time for reference
     };
 };

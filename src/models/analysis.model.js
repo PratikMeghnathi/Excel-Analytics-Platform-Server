@@ -52,6 +52,23 @@ const analysisSchema = new mongoose.Schema({
         rows: Array, // Just 5-10 rows for reference
         totalRows: Number
     },
+    aiInsights: {
+        promptType: {
+            type: String,
+            enum: ['summary', 'trends', 'performance', 'overview'],
+        },
+        insights: {
+            type: String,
+        },
+        generatedAt: {
+            type: Date,
+        },
+        metadata: {
+            totalRows: Number,  
+            columnCount: Number,
+            headers: [String]
+        }
+    }
 }, { timestamps: true });
 
 

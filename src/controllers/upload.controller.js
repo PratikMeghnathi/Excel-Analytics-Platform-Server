@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import { createError, errorCodes, parseExcelFile } from "../utils/index.js"
-import { DataSet, FileUpload } from "../models/index.js";
+import { DataSet, FileUpload, User } from "../models/index.js";
 import { upload } from '../middlewares/index.js';
 
 export const uploadExcelFile = (req, res, next) => {
@@ -21,12 +21,80 @@ export const uploadExcelFile = (req, res, next) => {
     });
 }
 
+const checkUploadLimit = async (userId) => {
+    try {
+        const user = await User.findById(userId).select('uploadLimit');
+
+        if (!user) {
+            return {
+                allowed: false,
+                message: 'User not found.'
+            };
+        }
+
+        // If upload limit is -1 (unrestricted), allow upload
+        if (user.uploadLimit === -1) {
+            return {
+                allowed: true,
+                message: 'Upload allowed - no limit set.'
+            };
+        }
+
+        // Count current uploads for the user
+        const currentUploadCount = await FileUpload.countDocuments({ userId });
+
+        // Check if user has reached their limit
+        if (currentUploadCount >= user.uploadLimit) {
+            return {
+                allowed: false,
+                message: `Upload limit reached. You have uploaded ${currentUploadCount} files out of your ${user.uploadLimit} file limit.`
+            };
+        }
+
+        return {
+            allowed: true,
+            message: `Upload allowed. You have ${user.uploadLimit - currentUploadCount} uploads remaining.`
+        };
+
+    } catch (error) {
+        console.error('Error checking upload limit:', error);
+        return {
+            allowed: false,
+            message: 'Error checking upload permissions.'
+        };
+    }
+};
+
 const processAndSaveExcelFile = async (req, res) => {
     const filePath = req.file?.path;
     try {
+        if (req.user.role !== 'admin' && req.user.permissions === 'Read Only') {
+            if (filePath) {
+                try {
+                    await fs.unlink(filePath);
+                } catch (err) {
+                    console.warn('Failed to delete file after permission check:', err);
+                }
+            }
+            return res.status(403).json(createError(errorCodes.forbidden, 'permission', 'You do not have permission to upload files.'));
+        }
+        
+        const uploadLimitCheck = await checkUploadLimit(req.user.id);
+        if (!uploadLimitCheck.allowed) {
+            if (filePath) {
+                try {
+                    await fs.unlink(filePath);
+                } catch (err) {
+                    console.warn('Failed to delete file after upload limit check:', err);
+                }
+            }
+            return res.status(429).json(createError(errorCodes.tooManyRequests, 'uploadLimit', uploadLimitCheck.message));
+        }
+
         if (!req.file) {
             return res.status(400).json(createError(errorCodes.badRequest, 'excelFile', 'Please provide an excel file to proceed.'))
         }
+
         const { filename, originalname, size } = req.file;
         let parsedData = parseExcelFile(filePath);
 
@@ -96,7 +164,7 @@ const processAndSaveExcelFile = async (req, res) => {
 }
 
 export const getAllUploads = async (req, res) => {
-    try {
+    try {   
         const userId = req.user.id;
         const [fileUploads, totalCount] = await Promise.all([
             FileUpload.find({ userId }).select('originalName fileSize createdAt').sort({ createdAt: -1 }).limit(30),

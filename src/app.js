@@ -13,6 +13,7 @@ app.use(cors({
     // origin: true,                                   //Enable CORS for all origins
     credentials: true,                              //allow credentials like cookies and all
     origin: [
+        // 'http://localhost:5173',
         'https://excel-analytics-platform-client.vercel.app'
     ]
 }));

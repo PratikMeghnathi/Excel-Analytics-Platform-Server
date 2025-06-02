@@ -14,10 +14,22 @@ const userSchema = new mongoose.Schema({
         unique: true,
         match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please enter a valid email address."]
     },
+    isEmailVerified: {
+        type: Boolean,
+        default: false
+    },
+    emailVerifiedAt: {
+        type: Date,
+        default: null
+    },
     password: {
         type: String,
         required: [true, "A password is required to create an account."],
         minlength: [6, "Password must be at least 6 characters long."]
+    },
+    passwordChangedAt: {
+        type: Date,
+        default: null
     },
     role: {
         type: String,
@@ -30,19 +42,19 @@ const userSchema = new mongoose.Schema({
         default: 'Full Access'
     },
     uploadLimit: {
-        type: mongoose.Schema.Types.Mixed,
-        default: 'unrestricted',
-    validate: {
-            validator: (value) => typeof value === 'number' || value === 'unrestricted',
-            message: 'Upload limit must be a number or "unrestricted".'
+        type: Number,
+        default: -1,
+        validate: {
+            validator: (value) => Number.isInteger(value) && value >= -1,
+            message: 'Upload limit must be -1 (unrestricted) or a positive integer.'
         }
     },
     analysisLimit: {
-        type: mongoose.Schema.Types.Mixed,
-        default: 'unrestricted',
+        type: Number,
+        default: -1,
         validate: {
-            validator: (value) => typeof value === 'number' || value === 'unrestricted',
-            message: 'Analysis limit must be a number or "unrestricted".'
+            validator: (value) => Number.isInteger(value) && value >= -1,
+            message: 'Analysis limit must be -1 (unrestricted) or a positive integer.'
         }
     },
     refreshToken: {
