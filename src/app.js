@@ -5,6 +5,7 @@ import path from 'path';
 
 import { adminRouter, analysisRouter, uploadRouter, userRouter } from "./routes/index.js";
 import { __rootdir } from "./utils/index.js";
+import { env } from "./config/index.js";
 
 const app = express();
 
@@ -13,8 +14,7 @@ app.use(cors({
     // origin: true,                                   //Enable CORS for all origins
     credentials: true,                              //allow credentials like cookies and all
     origin: [
-        // 'http://localhost:5173',
-        'https://excel-analytics-platform-client.vercel.app'
+        env.frontend_url
     ]
 }));
 

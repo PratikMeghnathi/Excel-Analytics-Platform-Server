@@ -15,7 +15,8 @@ const env = {
     refreshTokenValidity: process.env.REFRESH_TOKEN_VALIDITY || '1d',
     refreshTokenMaxAge: process.env.REFRESH_TOKEN_MAX_AGE || 604800000,
 
-    geminiApiKey: process.env.GEMINI_API_KEY || ''
+    geminiApiKey: process.env.GEMINI_API_KEY || '',
+    frontend_url: process.env.FRONTEND_URL || ''
 };
 
 export default env;
