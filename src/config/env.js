@@ -16,7 +16,7 @@ const env = {
     refreshTokenMaxAge: process.env.REFRESH_TOKEN_MAX_AGE || 604800000,
 
     geminiApiKey: process.env.GEMINI_API_KEY || '',
-    frontend_url: process.env.FRONTEND_URL || ''
+    frontend_url: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : process.env.FRONTEND_LOCAL_URL
 };
 
 export default env;
