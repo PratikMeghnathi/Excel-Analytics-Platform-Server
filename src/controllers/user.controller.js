@@ -12,10 +12,10 @@ import crypto from "crypto";
 
 // Initialize Redis client
 const redisClient = new Redis({
-    username: process.env.REDIS_USERNAME,
-    password: process.env.REDIS_PASSWORD,
-    host: process.env.REDIS_HOST,
-    port: process.env.REDIS_PORT,
+    username: env.redis_username,
+    password: env.redis_password,
+    host: env.redis_host,
+    port: env.redis_port,
     maxRetriesPerRequest: null
 });
 redisClient.on('error', (err) => {
@@ -27,8 +27,8 @@ redisClient.on('connect', () => {
 
 // Initialize Mailjet
 const mailjetClient = Mailjet.apiConnect(
-    process.env.MAILJET_API_KEY,
-    process.env.MAILJET_SECRET_KEY
+    env.mailjet_api_key,
+    env.mailjet_secret_key
 );
 
 // Email verification token expiry (15 minutes)
@@ -39,13 +39,13 @@ const generateVerificationToken = () => {
 };
 
 const sendVerificationEmail = async (email, username, verificationToken) => {
-    const verification_url = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    const verification_url = `${env.frontend_url}/verify-email?token=${verificationToken}`;
 
     const emailData = {
         Messages: [{
             From: {
-                Email: process.env.FROM_EMAIL,
-                Name: process.env.FROM_NAME || 'Excel Analytics'
+                Email: env.from_email,
+                Name: env.from_name || 'Excel Analytics'
             },
             To: [{
                 Email: email,
@@ -364,13 +364,13 @@ const generatePasswordResetToken = () => {
 };
 
 const sendPasswordResetEmail = async (email, username, resetToken) => {
-    const reset_url = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+    const reset_url = `${env.frontend_url}/reset-password?token=${resetToken}`;
 
     const emailData = {
         Messages: [{
             From: {
-                Email: process.env.FROM_EMAIL,
-                Name: process.env.FROM_NAME || 'Excel Analytics'
+                Email: env.from_email,
+                Name: env.from_name || 'Excel Analytics'
             },
             To: [{
                 Email: email,

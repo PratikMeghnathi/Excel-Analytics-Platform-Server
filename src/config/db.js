@@ -3,8 +3,7 @@ import env from './env.js';
 
 const connectDB = async () => {
     try {
-        // await connect(env.mongodbLocalURI);
-        await connect(env.mongodbCloudURI);
+        await connect(env.mongodb_url);
         console.log(`Successfully connected with database.`);
     } catch (error) {
         console.log(`Failed to connect with database. Error: ${error}`);
