@@ -8,7 +8,7 @@ import app from "./app.js";
         const server = http.createServer(app);
 
         server.listen(env.port, () => {
-            console.log(`Server started at ${env.backend_url}`);
+            console.log(`Server started at ${env.backend_url}${env.node_env === 'production' ? '' : ':' + env.port}`);
         })
     } catch (error) {
         console.log('Error occured during initializing the server: ', error);

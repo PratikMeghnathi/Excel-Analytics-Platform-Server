@@ -305,7 +305,7 @@ export const resendVerificationEmail = async (req, res) => {
 
     } catch (error) {
         console.error("Error resending verification email:", error);
-        res.status(500).json(
+        res.status(500).jsn(
             createError(errorCodes.serverError, 'serverError', 'An error occurred while resending verification email.')
         );
     }
@@ -332,7 +332,17 @@ export const loginUser = async (req, res) => {
             return res.status(400).json(createError(errorCodes.badRequest, 'input', 'Both email and password is required.'));
         }
 
+        const allUsers = await User.find({});
+        console.log('All users in database:', allUsers);
+
+        // Debug: Check the exact email being searched
+        console.log('Searching for email:', JSON.stringify(email));
+        console.log('Email type:', typeof email);
+        console.log('Email length:', email?.length);
+
+
         const existingUser = await User.findOne({ email });
+        console.log({ email, password, existingUser })
         if (!existingUser) {
             return res.status(401).json(createError(errorCodes.unauthorized, 'credentials', 'Invalid username or password.'));
         }
