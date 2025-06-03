@@ -8,7 +8,7 @@ import app from "./app.js";
         const server = http.createServer(app);
 
         server.listen(env.port, () => {
-            console.log(`Server started at http://localhost:${env.port}`);
+            console.log(`Server started at ${env.backend_url}`);
         })
     } catch (error) {
         console.log('Error occured during initializing the server: ', error);
