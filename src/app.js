@@ -11,11 +11,11 @@ const app = express();
 console.log({ frontend_url: env.frontend_url })
 //cors middleware
 app.use(cors({
-    // origin: true,                                   //Enable CORS for all origins
-    credentials: true,                                 //allow credentials like cookies and all
-    origin: [
-        env.frontend_url
-    ]
+    origin: true,                                   //Enable CORS for all origins
+    credentials: true,                              //allow credentials like cookies and all
+    // origin: [
+    //     env.frontend_url
+    // ]
 }));
 
 //----parsers-----
