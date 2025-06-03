@@ -2,6 +2,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const env = {
+    port: process.env.PORT || 5000,
+
     mongodbLocalURI: process.env.MONGODB_LOCAL_URI || '',
     mongodbCloudURI: process.env.MONGODB_CLOUD_URI || '',
 
