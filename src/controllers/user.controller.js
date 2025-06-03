@@ -39,7 +39,6 @@ const generateVerificationToken = () => {
 };
 
 const sendVerificationEmail = async (email, username, verificationToken) => {
-    console.log({ verification_url: env.frontend_url })
     const verification_url = `${env.frontend_url}/verify-email?token=${verificationToken}`;
 
     const emailData = {
@@ -333,17 +332,7 @@ export const loginUser = async (req, res) => {
             return res.status(400).json(createError(errorCodes.badRequest, 'input', 'Both email and password is required.'));
         }
 
-        const allUsers = await User.find({});
-        console.log('All users in database:', allUsers);
-
-        // Debug: Check the exact email being searched
-        console.log('Searching for email:', JSON.stringify(email));
-        console.log('Email type:', typeof email);
-        console.log('Email length:', email?.length);
-
-
         const existingUser = await User.findOne({ email });
-        console.log({ email, password, existingUser })
         if (!existingUser) {
             return res.status(401).json(createError(errorCodes.unauthorized, 'credentials', 'Invalid username or password.'));
         }
