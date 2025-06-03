@@ -39,6 +39,7 @@ const generateVerificationToken = () => {
 };
 
 const sendVerificationEmail = async (email, username, verificationToken) => {
+    console.log({ verification_url: env.frontend_url })
     const verification_url = `${env.frontend_url}/verify-email?token=${verificationToken}`;
 
     const emailData = {
@@ -374,6 +375,7 @@ const generatePasswordResetToken = () => {
 };
 
 const sendPasswordResetEmail = async (email, username, resetToken) => {
+    console.log({ reset_url: env.frontend_url })
     const reset_url = `${env.frontend_url}/reset-password?token=${resetToken}`;
 
     const emailData = {
