@@ -356,6 +356,7 @@ export const loginUser = async (req, res) => {
     }
 }
 
+// Password reset token expiry (30 minutes)
 const PASSWORD_RESET_EXPIRY = 30 * 60;
 
 // Generate password reset token
@@ -364,7 +365,6 @@ const generatePasswordResetToken = () => {
 };
 
 const sendPasswordResetEmail = async (email, username, resetToken) => {
-    console.log({ reset_url: env.frontend_url })
     const reset_url = `${env.frontend_url}/reset-password?token=${resetToken}`;
 
     const emailData = {
@@ -584,7 +584,7 @@ export const resetPassword = async (req, res) => {
     }
 };
 
-// Verify reset token (optional - for frontend validation)
+// Verify reset token
 export const verifyResetToken = async (req, res) => {
     try {
         const { token } = req.query;
@@ -851,7 +851,6 @@ export const deleteMyAccount = async (req, res) => {
             );
         }
 
-        // Use the same transaction logic as deleteUser
         await session.withTransaction(async () => {
             const fileUploads = await FileUpload.find({ userId }).session(session);
 

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
+import { GoogleGenAI } from "@google/genai";
 import { Analysis, DataSet, User } from "../models/index.js";
 import { createError, errorCodes } from "../utils/index.js";
-import { GoogleGenAI } from "@google/genai";
 import { env } from "../config/index.js";
 
 const checkAnalysisLimit = async (userId) => {

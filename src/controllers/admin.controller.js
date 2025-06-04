@@ -271,7 +271,7 @@ const getAnalyticsReportingStats = async (thirtyDaysAgo) => {
     const peakHour = peakUploadTime.length > 0 ? peakUploadTime[0].hour : null;
     const peakUploadCount = peakUploadTime.length > 0 ? peakUploadTime[0].count : 0;
 
-    // Use recent uploads for frequency calculation (last 30 days) instead of all-time
+    // Use recent uploads for frequency calculation (last 30 days)
     const uploadFrequency = totalUsers > 0 ? parseFloat((recentUploads / totalUsers).toFixed(2)) : 0;
     const usageRate = totalUsers > 0 ? parseFloat(((activeUsers / totalUsers) * 100).toFixed(2)) : 0;
 

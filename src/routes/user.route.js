@@ -26,7 +26,6 @@ userRouter.delete('/delete-my-account', validateUser, deleteMyAccount);
 
 // ------- test/development only routes ------------- //
 userRouter.get('/validate', validateUser, (req, res) => {
-    console.log(req.user);
     res.json(req.user);
 })
 //INSERT users
@@ -83,7 +82,7 @@ userRouter.get('/migration', async (req, res) => {
         console.log(`Updated ${uploadResult.modifiedCount} users' uploadLimit`);
         console.log(`Updated ${analysisResult.modifiedCount} users' analysisLimit`);
 
-        // Optional: Also handle null or undefined values
+        // Also handle null or undefined values
         const uploadNullResult = await User.updateMany(
             {
                 $or: [

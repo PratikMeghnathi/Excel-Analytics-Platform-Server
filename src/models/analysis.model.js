@@ -49,7 +49,7 @@ const analysisSchema = new mongoose.Schema({
     },
     dataSample: {
         headers: [String],
-        rows: Array, // Just 5-10 rows for reference
+        rows: Array,
         totalRows: Number
     },
     aiInsights: {
