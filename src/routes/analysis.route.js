@@ -5,7 +5,7 @@ import { deleteAnalysis, getAiInsightsOfSheetById, getAiPromptTypes, getAllAnaly
 const analysisRouter = express.Router();
 analysisRouter.post('/save', validateUser, saveAnalysis);
 analysisRouter.get('/history', validateUser, getAllAnalyses);
-analysisRouter.get('/:dataSetId/:sheetIndex', validateUser, getAnalysisById);
+analysisRouter.get('/:analaysisId/:dataSetId/:sheetIndex', validateUser, getAnalysisById);
 analysisRouter.delete('/delete/:analysisId', validateUser, deleteAnalysis);
 
 

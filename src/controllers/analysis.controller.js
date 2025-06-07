@@ -199,7 +199,7 @@ export const getAllAnalyses = async (req, res) => {
 
 export const getAnalysisById = async (req, res) => {
     try {
-        const { dataSetId, sheetIndex } = req.params;
+        const { dataSetId, sheetIndex, analaysisId } = req.params;
         const parsedIndex = parseInt(sheetIndex, 10);
         if (isNaN(parsedIndex) || parsedIndex < 0) {
             return res.status(400).json(createError(
@@ -225,9 +225,7 @@ export const getAnalysisById = async (req, res) => {
         const sheet = dataSet.sheets[parsedIndex];
 
         // Check if there are any saved analyses for this dataSet and sheetIndex that might have AI insights
-        const savedAnalysis = await Analysis.findOne({
-            dataSetId: dataSetId,
-        }).sort({ createdAt: -1 });
+        const savedAnalysis = await Analysis.findOne({ _id: analaysisId }).sort({ createdAt: -1 });
 
         const response = {
             message: "The analysis data has been successfully retrieved.",
