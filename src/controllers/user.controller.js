@@ -24,6 +24,9 @@ redisClient.on('error', (err) => {
 redisClient.on('connect', () => {
     console.log('Connected to Redis');
 });
+redisClient.on('ready', () => {
+    console.log('Redis ready for operations');
+});
 
 // Initialize Mailjet
 const mailjetClient = Mailjet.apiConnect(
