@@ -9,13 +9,37 @@ import { env } from "./config/index.js";
 
 const app = express();
 
+app.use((req, res, next) => {
+    console.log('📨 Request from:', req.headers.origin);
+    console.log('🔑 NODE_ENV:', env.node_env);
+    console.log('🌐 Allowed origin:', env.frontend_url);
+    next();
+});
+
 //cors middleware
 app.use(cors({
     credentials: true,                              //allow credentials like cookies and all
-    origin: [
-        env.frontend_url,
-        'http://localhost:5173'
-    ]
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or Postman)
+        if (!origin) return callback(null, true);
+        
+        const allowedOrigins = [
+            env.frontend_url  // Main frontend URL
+        ];
+        
+        // Check if origin is in allowed list
+        const isAllowed = allowedOrigins.includes(origin);
+        
+        // Also allow any vercel.app preview deployments in non-production
+        const isVercelPreview = origin.includes('.vercel.app');
+        
+        if (isAllowed || (env.node_env !== 'production' && isVercelPreview)) {
+            callback(null, true);
+        } else {
+            console.log('❌ CORS blocked origin:', origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    }
 }));
 
 //----parsers-----
