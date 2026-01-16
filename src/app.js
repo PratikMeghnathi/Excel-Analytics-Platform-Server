@@ -18,11 +18,36 @@ app.use((req, res, next) => {
 
 //cors middleware
 app.use(cors({
-    credentials: true,                              //allow credentials like cookies and all
-    origin: [
-        env.frontend_url,
-        'http://localhost:5173'
-    ]
+    credentials: true,
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps, Postman, curl)
+        if (!origin) return callback(null, true);
+        
+        const allowedOrigins = [
+            env.frontend_url,  // https://excel-analytics-platform-client.vercel.app
+            'http://localhost:5173',
+            'http://localhost:3000'
+        ];
+        
+        // Check if origin is in allowed list
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        
+        // Allow any Vercel preview deployment for your project
+        if (origin.startsWith('https://excel-analytics-platform-client') && 
+            origin.endsWith('.vercel.app')) {
+            return callback(null, true);
+        }
+        
+        // Log blocked origins for debugging
+        console.log('❌ CORS blocked origin:', origin);
+        callback(new Error('Not allowed by CORS'));
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+    exposedHeaders: ['Set-Cookie'],
+    maxAge: 86400 // Cache preflight for 24 hours
 }));
 
 //----parsers-----
