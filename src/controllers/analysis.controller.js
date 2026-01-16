@@ -422,10 +422,22 @@ export const getAiInsightsOfSheetById = async (req, res) => {
         const prompt = selectedPrompt.prompt(sheetName, analysisData.headers, analysisData.sampleData);
 
         const result = await ai.models.generateContent({
-            model: 'gemini-2.0-flash-001',
+            model: 'gemini-3-flash-preview',
             contents: prompt,
         });
-        const rawInsights = result.text;
+
+        // console.log('Gemini API result:', JSON.stringify(result, null, 2));
+        // console.log('Response object:',  result.text);
+
+        const rawInsights = result.text || result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+        if (!rawInsights) {
+            return res.status(500).json(createError(
+                errorCodes.serverError,
+                'aiService',
+                "AI service returned an empty response. Please try again."
+            ));
+        }
 
         // Clean up formatting
         const insights = rawInsights
