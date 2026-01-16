@@ -33,19 +33,20 @@ app.use(cors({
         }
 
         // Allow any Vercel preview deployment for your project
-        if (origin.startsWith('https://excel-analytics-platform-client') &&
-            (origin.endsWith('.vercel.app') || origin.endsWith('.netlify.app'))) {
+        if (origin.startsWith('https://excel-analytics-platform-client') && origin.endsWith('.vercel.app')) {
+            return callback(null, true);
+        }
+
+        // Allow any Netlify preview deployment
+        if (origin.endsWith('.netlify.app') &&
+            origin.includes('excel-analytics-platform-client')) {
             return callback(null, true);
         }
 
         // Log blocked origins for debugging
         console.log('❌ CORS blocked origin:', origin);
         callback(new Error('Not allowed by CORS'));
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-    exposedHeaders: ['Set-Cookie'],
-    maxAge: 86400 // Cache preflight for 24 hours
+    }
 }));
 
 //----parsers-----
