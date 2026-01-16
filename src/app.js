@@ -25,6 +25,7 @@ app.use(cors({
 
         const allowedOrigins = [
             env.frontend_url,
+            'http://localhost:5173',
         ];
 
         // Check if origin is in allowed list
