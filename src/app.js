@@ -24,9 +24,7 @@ app.use(cors({
         if (!origin) return callback(null, true);
         
         const allowedOrigins = [
-            env.frontend_url,  // https://excel-analytics-platform-client.vercel.app
-            'http://localhost:5173',
-            'http://localhost:3000'
+            env.frontend_url,
         ];
         
         // Check if origin is in allowed list
