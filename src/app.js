@@ -20,7 +20,8 @@ app.use((req, res, next) => {
 app.use(cors({
     credentials: true,                              //allow credentials like cookies and all
     origin: [
-        env.frontend_url
+        env.frontend_url,
+        'localhost:5173'
     ]
 }));
 
